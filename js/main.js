@@ -11,6 +11,8 @@ var connection = function() {
         log("Bluetooth not available")
         return;
       }
+      disconnectLog('');
+      exceptionLog('');
       log('Connecting to device ' + deviceName);
       navigator.bluetooth.requestDevice({ filters: [
         //   { services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] } 
@@ -51,7 +53,7 @@ var connection = function() {
         log('Read ' + value.getUint8(0));
       })
       .catch(error => { 
-        log(error.message); 
+        exceptionLog(error.message); 
       });
       
       
@@ -64,7 +66,7 @@ var connection = function() {
 
       function onDisconnected(event) {
         let device = event.target;
-        log('Device ' + device.name + ' is disconnected.');
+        disconnectLog(device.name);
       }
 
       function onDisconnectButtonClick() {
@@ -109,3 +111,18 @@ var responseLog = function(data) {
   logWindow.style ='display:block';
   logWindow.textContent = 'ResponseData: ' + data;
 }
+
+var disconnectLog = function(data) {
+  let logWindow = document.getElementById('disLogWindow');
+  logWindow.style ='display:block';
+  logWindow.textContent = 'Disconnected: ' + data;
+}
+
+var exceptionLog = function(data) {
+  let logWindow = document.getElementById('exeLogWindow');
+  logWindow.style ='display:block';
+  logWindow.textContent = 'Exception: ' + data;
+}
+
+
+
