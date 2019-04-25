@@ -1,18 +1,20 @@
-var item1 = document.getElementById('container1');
-var item2 = document.getElementById('container2');
+var connection = function() {
+  var deviceName = document.getElementById('deviceName').value;
 
-item2.style.display = 'none';
+  if(!deviceName) {
+    log('Kindly enter a device name');
+    return;
+  }
 
-
-var connection = function(){
   var bluetoothDevice;
     if (!('bluetooth' in navigator)) {
-        alert("Bluetooth not available")
+        log("Bluetooth not available")
         return;
       }
+      log('Connecting to device ' + deviceName);
       navigator.bluetooth.requestDevice({ filters: [
         //   { services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] } 
-          { name: 'M583' }
+          { name: deviceName }
         ] })
       .then(device => {
         bluetoothDevice = device;
@@ -34,56 +36,76 @@ var connection = function(){
       .then(characteristic => {
 
         // Reading Battery Level...
-        characteristic.addEventListener('characteristicvaluechanged',
-                                  handleBatteryLevelChanged);
+        characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicResponse);
 
          // Writing 1 is the signal to reset energy expended.
        
+        let connectCode = '$cA*;';
         let encoder = new TextEncoder('utf-8');
-        let userDescription = encoder.encode('$cA*;');
+        let userDescription = encoder.encode(connectCode);
         characteristic.writeValue(userDescription);
+        requestLog(connectCode + ' (In Hexa ' + ascii_to_hexa(connectCode) + ')' )
         return characteristic.readValue();
       })
       .then(value => {
-        console.log('Read ' + value.getUint8(0));
+        log('Read ' + value.getUint8(0));
       })
-      .catch(error => { console.log(error); });
-
-      function handleBatteryLevelChanged(event) {
+      .catch(error => { 
+        log(error.message); 
+      });
+      
+      
+      function handleCharacteristicResponse (event) {
         let decoder = new TextDecoder('utf-8')
-        let batteryLevel = decoder.decode( event.target.value);
-       console.log("response",batteryLevel);
-        if(batteryLevel === '1' || batteryLevel === '112'){
-          onDisconnectButtonClick();
-        }
-        else if(batteryLevel === '111'){
-          alert("Please Place another Helmet");
-        }
-        else{
-          alert(batteryLevel);
-        }
-        console.log('Read ' + batteryLevel);
+        let response = decoder.decode(event.target.value);
+        
+        responseLog(response + ' (In Hexa: '+ ascii_to_hexa(response)+')');
       }
 
       function onDisconnected(event) {
         let device = event.target;
-        console.log('Device ' + device.name + ' is disconnected.');
-        item1.style.display = 'none';
-        item2.style.display = 'block';
+        log('Device ' + device.name + ' is disconnected.');
       }
 
       function onDisconnectButtonClick() {
         if (!bluetoothDevice) {
           return;
         }
-        console.log('Disconnecting from Bluetooth Device...');
+
+        log('Disconnecting from Bluetooth Device...');
         if (bluetoothDevice.gatt.connected) {
           bluetoothDevice.gatt.disconnect();
         } else {
-          console.log('> Bluetooth Device is already disconnected');
+          log('> Bluetooth Device is already disconnected');
         }
       }
+};
+
+
+var ascii_to_hexa = function (str) {
+	var arr1 = [];
+	for (var n = 0, l = str.length; n < l; n ++) 
+     {
+		var hex = Number(str.charCodeAt(n)).toString(16);
+		arr1.push(hex);
+	 }
+	return arr1.join('');
 }
 
-var btn = document.getElementById('enable');
-btn.addEventListener('click',connection);
+var log = function (data) {
+  let logWindow = document.getElementById('logWindow');
+  logWindow.style ='display:block';
+  logWindow.textContent = data || '';
+}
+
+var requestLog = function(data) {
+  let logWindow = document.getElementById('reqLogWindow');
+  logWindow.style ='display:block';
+  logWindow.textContent = 'RequestData: ' + data;
+}
+
+var responseLog = function(data) {
+  let logWindow = document.getElementById('resLogWindow');
+  logWindow.style ='display:block';
+  logWindow.textContent = 'ResponseData: ' + data;
+}
