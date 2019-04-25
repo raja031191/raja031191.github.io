@@ -19,6 +19,7 @@ var connection = function() {
         { services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] },
         ] })
       .then(device => {
+        log('Connecting to gatt server');
         bluetoothDevice = device;
         // Set up event listener for when device gets disconnected.
         device.addEventListener('gattserverdisconnected', onDisconnected);
@@ -27,16 +28,18 @@ var connection = function() {
         return device.gatt.connect();
       })
       .then(server => {
+        log('Getting primary service');
         // Getting Battery Service...
         return server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
       })
       .then(service => {
+        log('Getting characteristic');
         // Getting Battery Level Characteristic...
         return service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
       })
       .then(characteristic => characteristic.startNotifications())
       .then(characteristic => {
-
+        log('Sending information');
         // Reading Battery Level...
         characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicResponse);
 
