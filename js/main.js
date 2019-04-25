@@ -15,8 +15,8 @@ var connection = function() {
       exceptionLog('');
       log('Connecting to device ' + deviceName);
       navigator.bluetooth.requestDevice({ filters: [
-        //   { services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] } 
-          { name: deviceName }
+        { name: deviceName },
+        { services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] },
         ] })
       .then(device => {
         bluetoothDevice = device;
